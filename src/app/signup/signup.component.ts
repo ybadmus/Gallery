@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { UserDto } from '../shared/user';
+import { LoginDto } from '../shared/login';
 import { FormControl , FormGroup, Validators} from '@angular/forms';
 import { Router } from '@angular/router';
 import { baseURL } from '../shared/baseUrl';
@@ -9,71 +9,66 @@ import { Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-signup',
-  templateUrl: './signup.component.html',
-  styleUrls: ['./signup.component.css']
+  selector: 'app-signin',
+  templateUrl: './signin.component.html',
+  styleUrls: ['./signin.component.css']
 })
 
-export class SignupComponent implements OnInit {
+export class SigninComponent implements OnInit {
 
-  signupForm:FormGroup;
-  user:UserDto;
-  token:any;
+  signinForm:FormGroup;
+  user: LoginDto;
+  // token:any;
+  isMainFeed: false;
 
   constructor(private router: Router, private http: HttpClient) { }
-  
+
   ngOnInit(): void {
     this.createForm();
   }
 
   createForm() {
-    this.signupForm = new FormGroup({
+    this.signinForm = new FormGroup({
       email: new FormControl('', [Validators.required,Validators.minLength(3)]),
       password: new FormControl('', [Validators.required,Validators.minLength(3)]),
-      first_name: new FormControl('', [Validators.required,Validators.minLength(3)]),
-      last_name: new FormControl('', [Validators.required,Validators.minLength(3)]),
-      phone_number:  new FormControl('', [Validators.required,Validators.minLength(3)])
     });
   }
 
   onSubmit() {
-    this.user = this.signupForm.value;
+    this.user = this.signinForm.value;
     console.log(this.user, baseURL);
 
     this.postUserDetails(this.user).subscribe(resp => {
-        this.token = resp; 
         this.onSuccess();
+        sessionStorage.setItem('auth', resp.auth_token);
       },
       errmess => { 
-        this.token = null; 
+        sessionStorage.setItem('auth', null); 
         this.onError();
       });
   }
 
-  postUserDetails(user: UserDto): Observable<UserDto> {
+  postUserDetails(user: LoginDto): Observable<LoginDto> {
     const httpOptions = {
       headers: new HttpHeaders({
         'Content-Type':  'application/json'
       })
     };
-    return this.http.post<UserDto>(baseURL + 'users/signup/', user, httpOptions)
+    return this.http.post<LoginDto>(baseURL + 'users/login/', user, httpOptions)
       .pipe(catchError(this.handleError));
   }
 
   onSuccess() {
-    this.signupForm.reset({
+    this.signinForm.reset({
       email: '',
       password: '',
-      first_name: '',
-      last_name: '',
-      phone_number: ''
     });
 
     this.router.navigate(['/mainfeed']);
   }
 
   onError() {
-    this.router.navigate(['/signup']);
+    this.router.navigate(['/signin']);
   }
 
   handleError(error: HttpErrorResponse | any) {
@@ -89,3 +84,4 @@ export class SignupComponent implements OnInit {
   }
 
 }
+
